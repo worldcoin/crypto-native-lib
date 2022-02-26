@@ -35,3 +35,8 @@ We can not check the static library directly. Instead we will compile a minimal 
 ```shell
 cargo bloat --release --target aarch64-apple-ios --crates -n 30
 ```
+
+### Generate header file
+```shell
+cbindgen ./src/lib.rs -c cbindgen.toml | grep -v \#include | uniq > src/libsemaphore.h
+```
