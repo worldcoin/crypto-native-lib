@@ -693,6 +693,8 @@ version = "0.1.0"
 dependencies = [
  "num-bigint 0.4.3",
  "semaphore",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2075,7 +2077,7 @@ dependencies = [
 [[package]]
 name = "semaphore"
 version = "0.1.0"
-source = "git+https://github.com/worldcoin/semaphore-rs?rev=60f671d#60f671d4cda66120ec7ef0f2999c9c17235336e3"
+source = "git+https://github.com/worldcoin/semaphore-rs?rev=718cbf6#718cbf6fe08e91a6a350d7dd92f06d448ce5ecb1"
 dependencies = [
  "ark-bn254",
  "ark-circom",

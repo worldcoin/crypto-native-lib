@@ -6,14 +6,15 @@ use std::{
 use semaphore::{
     hash::*,
     identity::Identity,
-    merkle_tree,
-    poseidon_tree::{PoseidonHash, PoseidonTree},
+    merkle_tree::{self, Proof},
+    poseidon_tree::{PoseidonHash, PoseidonTree, Branch},
     protocol,
     protocol::SnarkFileConfig,
     Groth16Proof,
 };
 
 use num_bigint::BigInt;
+use serde::{Serialize, Deserialize};
 
 // wrap all types for cbindgen
 pub struct CIdentity(Identity);
@@ -248,6 +249,22 @@ pub unsafe extern "C" fn verify_proof(
     )
     .unwrap() as i32
 }
+
+/// Deserialize merkle proof
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn deserialize_merkle_proof(json: *const c_char) -> *mut CMerkleProofPoseidonHash {
+    let json = unsafe { CStr::from_ptr(json) };
+    let json = match json.to_str() {
+        Err(_) => "there",
+        Ok(string) => string,
+    };
+
+    let tmp: Vec<Branch> = serde_json::from_str(json).unwrap();
+    let boxed: Box<CMerkleProofPoseidonHash> = Box::new(CMerkleProofPoseidonHash(Proof::<PoseidonHash>(tmp)));
+    Box::into_raw(boxed)
+}
+
 
 #[cfg(test)]
 mod tests {

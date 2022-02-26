@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-semaphore = { git = "https://github.com/worldcoin/semaphore-rs", rev = "60f671d" }
 num-bigint = { version = "0.4", default-features = false, features = ["rand"] }
+semaphore = { git = "https://github.com/worldcoin/semaphore-rs", rev = "718cbf6" }
+serde = "1.0"
+serde_json = "1.0"
 
 [lib]
 name = "cryptonative"
