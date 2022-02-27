@@ -63,3 +63,13 @@ int verify_proof(const char *root,
                  struct CGroth16Proof *proof,
                  const char *zkey_path,
                  const char *wasm_path);
+
+/**
+ * Deserialize merkle proof
+ */
+struct CMerkleProofPoseidonHash *deserialize_merkle_proof(const char *json);
+
+/**
+ * Serialize groth16 proof
+ */
+const char *serialize_groth16_proof(struct CGroth16Proof *proof);

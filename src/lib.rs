@@ -7,14 +7,13 @@ use semaphore::{
     hash::*,
     identity::Identity,
     merkle_tree::{self, Proof},
-    poseidon_tree::{PoseidonHash, PoseidonTree, Branch},
+    poseidon_tree::{Branch, PoseidonHash, PoseidonTree},
     protocol,
     protocol::SnarkFileConfig,
-    Groth16Proof,
+    EthereumGroth16Proof, Groth16Proof,
 };
 
 use num_bigint::BigInt;
-use serde::{Serialize, Deserialize};
 
 // wrap all types for cbindgen
 pub struct CIdentity(Identity);
@@ -63,7 +62,8 @@ pub unsafe extern "C" fn generate_nullifier_hash(
     };
 
     CString::new(
-        protocol::generate_nullifier_hash(&identity.0, external_nullifier.as_bytes()).to_str_radix(10),
+        protocol::generate_nullifier_hash(&identity.0, external_nullifier.as_bytes())
+            .to_str_radix(10),
     )
     .unwrap()
     .into_raw()
@@ -114,7 +114,7 @@ pub unsafe extern "C" fn get_root(tree: *mut CPoseidonTree) -> *mut c_char {
 pub unsafe extern "C" fn get_merkle_proof(
     tree: *mut CPoseidonTree,
     leaf_idx: c_int,
-) -> *mut CMerkleProofPoseidonHash{
+) -> *mut CMerkleProofPoseidonHash {
     let tree = unsafe {
         assert!(!tree.is_null());
         &mut *tree
@@ -253,7 +253,9 @@ pub unsafe extern "C" fn verify_proof(
 /// Deserialize merkle proof
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn deserialize_merkle_proof(json: *const c_char) -> *mut CMerkleProofPoseidonHash {
+pub unsafe extern "C" fn deserialize_merkle_proof(
+    json: *const c_char,
+) -> *mut CMerkleProofPoseidonHash {
     let json = unsafe { CStr::from_ptr(json) };
     let json = match json.to_str() {
         Err(_) => "there",
@@ -261,10 +263,24 @@ pub unsafe extern "C" fn deserialize_merkle_proof(json: *const c_char) -> *mut C
     };
 
     let tmp: Vec<Branch> = serde_json::from_str(json).unwrap();
-    let boxed: Box<CMerkleProofPoseidonHash> = Box::new(CMerkleProofPoseidonHash(Proof::<PoseidonHash>(tmp)));
+    let boxed: Box<CMerkleProofPoseidonHash> =
+        Box::new(CMerkleProofPoseidonHash(Proof::<PoseidonHash>(tmp)));
     Box::into_raw(boxed)
 }
 
+/// Serialize groth16 proof
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *const c_char {
+    let proof = &*proof;
+
+    let proof: EthereumGroth16Proof =  proof.0.clone().into();
+    let (a, b, c) = proof.as_tuple();
+    let v = vec![a.0, a.1, b.0[0], b.0[1], b.1[0], b.1[1], c.0, c.1];
+    let json = serde_json::to_string(&v).unwrap();
+
+    CString::new(json).unwrap().into_raw()
+}
 
 #[cfg(test)]
 mod tests {
