@@ -275,9 +275,7 @@ pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *
     let proof = &*proof;
 
     let proof: EthereumGroth16Proof =  proof.0.clone().into();
-    let (a, b, c) = proof.as_tuple();
-    let v = vec![a.0, a.1, b.0[0], b.0[1], b.1[0], b.1[1], c.0, c.1];
-    let json = serde_json::to_string(&v).unwrap();
+    let json = serde_json::to_string(&proof.as_tuple()).unwrap();
 
     CString::new(json).unwrap().into_raw()
 }
