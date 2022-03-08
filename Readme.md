@@ -22,6 +22,8 @@ If you get the error `xcrun: error: SDK "iphoneos" cannot be located`, run `sudo
 
 ```shell
 cargo build --release --lib --target aarch64-apple-ios
+cargo build --release --lib --target=aarch64-apple-ios-sim
+cargo build --release --lib --target=x86_64-apple-ios
 ```
 
 ```shell

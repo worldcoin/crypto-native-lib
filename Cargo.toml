@@ -21,6 +21,7 @@ lto = true
 panic = "abort"
 overflow-checks = true
 strip = true
+opt-level = 3
 
 # Compilation profile for any non-workspace member.
 # Dependencies are optimized, even in a dev build. This improves dev performance
