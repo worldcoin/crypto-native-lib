@@ -69,6 +69,23 @@ pub unsafe extern "C" fn generate_nullifier_hash(
     .into_raw()
 }
 
+/// Generates nullifier hash based on identity and external nullifier
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn hash_external_nullifier(external_nullifier: *const c_char) -> *mut c_char {
+    let c_str = unsafe { CStr::from_ptr(external_nullifier) };
+    let external_nullifier = match c_str.to_str() {
+        Err(_) => "there",
+        Ok(string) => string,
+    };
+
+    CString::new(protocol::hash_external_nullifier(
+        external_nullifier.as_bytes(),
+    ))
+    .unwrap()
+    .into_raw()
+}
+
 /// Initializes new poseidon tree of given depth
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -274,7 +291,7 @@ pub unsafe extern "C" fn deserialize_merkle_proof(
 pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *const c_char {
     let proof = &*proof;
 
-    let proof: EthereumGroth16Proof =  proof.0.clone().into();
+    let proof: EthereumGroth16Proof = proof.0.clone().into();
     let json = serde_json::to_string(&proof.as_tuple()).unwrap();
 
     CString::new(json).unwrap().into_raw()
