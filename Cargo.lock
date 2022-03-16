@@ -57,7 +57,7 @@ dependencies = [
 [[package]]
 name = "ark-circom"
 version = "0.1.0"
-source = "git+https://github.com/philsippl/ark-circom?rev=36baba5#36baba5839f672367be62de463e9338b88c5f9b0"
+source = "git+https://github.com/philsippl/ark-circom?rev=d42dc4c#d42dc4c147321b2ae454afcd8cc1e066c38e8b34"
 dependencies = [
  "ark-bn254",
  "ark-ec",
@@ -2108,7 +2108,7 @@ dependencies = [
 [[package]]
 name = "semaphore"
 version = "0.1.0"
-source = "git+https://github.com/worldcoin/semaphore-rs?rev=a0a28df#a0a28df4d6c2875ed4458e3991822c0c78259a7a"
+source = "git+https://github.com/worldcoin/semaphore-rs?rev=1149cd9#1149cd9e32d11972c5f410503d70f23190679dc5"
 dependencies = [
  "ark-bn254",
  "ark-circom",
