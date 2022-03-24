@@ -149,8 +149,6 @@ pub unsafe extern "C" fn generate_proof(
     external_nullifier_hash: *const c_char,
     signal: *const c_char,
     merkle_proof: *mut CMerkleProofPoseidonHash,
-    zkey_path: *const c_char,
-    wasm_path: *const c_char,
 ) -> *mut CGroth16Proof {
     let c_str = unsafe { CStr::from_ptr(external_nullifier_hash) };
     let external_nullifier_hash = match c_str.to_str() {
@@ -190,8 +188,6 @@ pub unsafe extern "C" fn verify_proof(
     signal: *const c_char,
     nullifier: *const c_char,
     proof: *mut CGroth16Proof,
-    zkey_path: *const c_char,
-    wasm_path: *const c_char,
 ) -> c_int {
     let c_str = unsafe { CStr::from_ptr(root) };
     let root = match c_str.to_str() {
