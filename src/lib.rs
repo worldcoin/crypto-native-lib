@@ -1,16 +1,16 @@
 use std::{
     ffi::{CStr, CString},
     os::raw::{c_char, c_int},
+    str::FromStr,
 };
 
 use semaphore::{
-    hash::*,
+    hash_to_field,
     identity::Identity,
-    merkle_tree::{self, Proof},
+    merkle_tree::{self},
     poseidon_tree::{Branch, PoseidonHash, PoseidonTree},
-    protocol,
-    protocol::SnarkFileConfig,
-    EthereumGroth16Proof, Groth16Proof,
+    protocol::{self},
+    Field,
 };
 
 use num_bigint::BigInt;
@@ -19,7 +19,7 @@ use num_bigint::BigInt;
 pub struct CIdentity(Identity);
 pub struct CPoseidonTree(PoseidonTree);
 pub struct CMerkleProofPoseidonHash(merkle_tree::Proof<PoseidonHash>);
-pub struct CGroth16Proof(Groth16Proof);
+pub struct CGroth16Proof(protocol::Proof);
 
 /// Creates a new idenity and returns the object
 #[no_mangle]
@@ -30,7 +30,7 @@ pub unsafe extern "C" fn new_identity(seed: *const c_char) -> *mut CIdentity {
         Err(_) => "there",
         Ok(string) => string,
     };
-    let id = Identity::new(seed.as_bytes());
+    let id = Identity::from_seed(seed.as_bytes());
 
     let boxed: Box<CIdentity> = Box::new(CIdentity(id));
     Box::into_raw(boxed)
@@ -41,7 +41,7 @@ pub unsafe extern "C" fn new_identity(seed: *const c_char) -> *mut CIdentity {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn generate_identity_commitment(identity: *mut CIdentity) -> *mut c_char {
     let identity = &*identity;
-    CString::new(identity.0.commitment().to_str_radix(10))
+    CString::new(identity.0.commitment().to_string())
         .unwrap()
         .into_raw()
 }
@@ -51,19 +51,20 @@ pub unsafe extern "C" fn generate_identity_commitment(identity: *mut CIdentity) 
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn generate_nullifier_hash(
     identity: *mut CIdentity,
-    external_nullifier: *const c_char,
+    external_nullifier_hash: *const c_char,
 ) -> *mut c_char {
     let identity = &*identity;
 
-    let c_str = unsafe { CStr::from_ptr(external_nullifier) };
-    let external_nullifier = match c_str.to_str() {
+    let c_str = unsafe { CStr::from_ptr(external_nullifier_hash) };
+    let external_nullifier_hash = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
+    let external_nullifier_hash =
+        Field::from_str(external_nullifier_hash).expect("parse as field element");
 
     CString::new(
-        protocol::generate_nullifier_hash(&identity.0, external_nullifier.as_bytes())
-            .to_str_radix(10),
+        protocol::generate_nullifier_hash(&identity.0, external_nullifier_hash).to_string(),
     )
     .unwrap()
     .into_raw()
@@ -79,20 +80,18 @@ pub unsafe extern "C" fn hash_external_nullifier(external_nullifier: *const c_ch
         Ok(string) => string,
     };
 
-    CString::new(protocol::hash_external_nullifier(
-        external_nullifier.as_bytes(),
-    ))
-    .unwrap()
-    .into_raw()
+    CString::new(hash_to_field(external_nullifier.as_bytes()).to_string())
+        .unwrap()
+        .into_raw()
 }
 
 /// Initializes new poseidon tree of given depth
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn create_poseidon_tree(depth: c_int) -> *mut CPoseidonTree {
-    const LEAF: Hash = Hash::from_bytes_be([0u8; 32]);
+    let leaf = Field::from(0);
 
-    let tree = PoseidonTree::new(depth as usize, LEAF);
+    let tree = PoseidonTree::new(depth as usize, leaf);
 
     let boxed: Box<CPoseidonTree> = Box::new(CPoseidonTree(tree));
     Box::into_raw(boxed)
@@ -108,8 +107,7 @@ pub unsafe extern "C" fn insert_leaf(tree: *mut CPoseidonTree, identity: *mut CI
         &mut *tree
     };
 
-    let (_, leaf) = identity.0.commitment().to_bytes_be();
-    tree.0.set(0, leaf.into());
+    tree.0.set(0, identity.0.commitment());
 }
 
 /// Returns root for given tree
@@ -148,50 +146,35 @@ pub unsafe extern "C" fn get_merkle_proof(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn generate_proof(
     identity: *mut CIdentity,
-    external_nullifier: *const c_char,
+    external_nullifier_hash: *const c_char,
     signal: *const c_char,
     merkle_proof: *mut CMerkleProofPoseidonHash,
     zkey_path: *const c_char,
     wasm_path: *const c_char,
 ) -> *mut CGroth16Proof {
-    let c_str = unsafe { CStr::from_ptr(external_nullifier) };
-    let external_nullifier = match c_str.to_str() {
+    let c_str = unsafe { CStr::from_ptr(external_nullifier_hash) };
+    let external_nullifier_hash = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
+    let external_nullifier_hash =
+        Field::from_str(external_nullifier_hash).expect("parse as field element");
 
     let c_str = unsafe { CStr::from_ptr(signal) };
     let signal = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
-
-    let c_str = unsafe { CStr::from_ptr(zkey_path) };
-    let zkey_path = match c_str.to_str() {
-        Err(_) => "there",
-        Ok(string) => string,
-    };
-
-    let c_str = unsafe { CStr::from_ptr(wasm_path) };
-    let wasm_path = match c_str.to_str() {
-        Err(_) => "there",
-        Ok(string) => string,
-    };
-
-    let config = SnarkFileConfig {
-        zkey: zkey_path.to_string(),
-        wasm: wasm_path.to_string(),
-    };
+    let signal_hash = hash_to_field(signal.as_bytes());
 
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
 
     let res = protocol::generate_proof(
-        &config,
         &identity.0,
         &merkle_proof.0,
-        external_nullifier.as_bytes(),
-        signal.as_bytes(),
+        external_nullifier_hash,
+        signal_hash,
     );
 
     let boxed: Box<CGroth16Proof> = Box::new(CGroth16Proof(res.unwrap()));
@@ -203,7 +186,7 @@ pub unsafe extern "C" fn generate_proof(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn verify_proof(
     root: *const c_char,
-    external_nullifier: *const c_char,
+    external_nullifier_hash: *const c_char,
     signal: *const c_char,
     nullifier: *const c_char,
     proof: *mut CGroth16Proof,
@@ -215,53 +198,37 @@ pub unsafe extern "C" fn verify_proof(
         Err(_) => "there",
         Ok(string) => string,
     };
+    let root = Field::from_str(root).expect("parse as field element");
 
-    let c_str = unsafe { CStr::from_ptr(external_nullifier) };
-    let external_nullifier = match c_str.to_str() {
+    let c_str = unsafe { CStr::from_ptr(external_nullifier_hash) };
+    let external_nullifier_hash = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
+    let external_nullifier_hash =
+        Field::from_str(external_nullifier_hash).expect("parse as field element");
 
     let c_str = unsafe { CStr::from_ptr(signal) };
     let signal = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
+    let signal_hash = hash_to_field(signal.as_bytes());
 
     let c_str = unsafe { CStr::from_ptr(nullifier) };
     let nullifier = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
-
-    let c_str = unsafe { CStr::from_ptr(zkey_path) };
-    let zkey_path = match c_str.to_str() {
-        Err(_) => "there",
-        Ok(string) => string,
-    };
-
-    let c_str = unsafe { CStr::from_ptr(wasm_path) };
-    let wasm_path = match c_str.to_str() {
-        Err(_) => "there",
-        Ok(string) => string,
-    };
-
-    let config = SnarkFileConfig {
-        zkey: zkey_path.to_string(),
-        wasm: wasm_path.to_string(),
-    };
+    let nullifier = Field::from_str(nullifier).expect("parse as field element");
 
     let proof = &*proof;
 
-    let root = BigInt::parse_bytes(root.as_bytes(), 10).unwrap();
-    let nullifier = BigInt::parse_bytes(nullifier.as_bytes(), 10).unwrap();
-
     protocol::verify_proof(
-        &config,
-        &root,
-        &nullifier,
-        signal.as_bytes(),
-        external_nullifier.as_bytes(),
+        root,
+        nullifier,
+        signal_hash,
+        external_nullifier_hash,
         &proof.0,
     )
     .unwrap() as i32
@@ -281,7 +248,7 @@ pub unsafe extern "C" fn deserialize_merkle_proof(
 
     let tmp: Vec<Branch> = serde_json::from_str(json).unwrap();
     let boxed: Box<CMerkleProofPoseidonHash> =
-        Box::new(CMerkleProofPoseidonHash(Proof::<PoseidonHash>(tmp)));
+        Box::new(CMerkleProofPoseidonHash(merkle_tree::Proof::<PoseidonHash>(tmp)));
     Box::into_raw(boxed)
 }
 
@@ -290,9 +257,7 @@ pub unsafe extern "C" fn deserialize_merkle_proof(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *const c_char {
     let proof = &*proof;
-
-    let proof: EthereumGroth16Proof = proof.0.clone().into();
-    let json = serde_json::to_string(&proof.as_tuple()).unwrap();
+    let json = serde_json::to_string(&proof.0).unwrap();
 
     CString::new(json).unwrap().into_raw()
 }
