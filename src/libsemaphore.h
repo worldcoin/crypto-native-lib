@@ -54,9 +54,7 @@ struct CMerkleProofPoseidonHash *get_merkle_proof(struct CPoseidonTree *tree, in
 struct CGroth16Proof *generate_proof(struct CIdentity *identity,
                                      const char *external_nullifier_hash,
                                      const char *signal,
-                                     struct CMerkleProofPoseidonHash *merkle_proof,
-                                     const char *zkey_path,
-                                     const char *wasm_path);
+                                     struct CMerkleProofPoseidonHash *merkle_proof);
 
 /**
  * Verifies semaphore proof
@@ -65,9 +63,7 @@ int verify_proof(const char *root,
                  const char *external_nullifier_hash,
                  const char *signal,
                  const char *nullifier,
-                 struct CGroth16Proof *proof,
-                 const char *zkey_path,
-                 const char *wasm_path);
+                 struct CGroth16Proof *proof);
 
 /**
  * Deserialize merkle proof
