@@ -74,3 +74,8 @@ struct CMerkleProofPoseidonHash *deserialize_merkle_proof(const char *json);
  * Serialize groth16 proof
  */
 const char *serialize_groth16_proof(struct CGroth16Proof *proof);
+
+/**
+ * Initializes the witness generator path (only needed on iOS for the dylib path)
+ */
+void init_witness_generator_path(const char *path);

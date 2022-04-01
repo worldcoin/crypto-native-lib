@@ -10,6 +10,7 @@ use semaphore::{
     merkle_tree::{self},
     poseidon_tree::{Branch, PoseidonHash, PoseidonTree},
     protocol::{self},
+    circuit::{self},
     Field,
 };
 
@@ -119,8 +120,7 @@ pub unsafe extern "C" fn get_root(tree: *mut CPoseidonTree) -> *mut c_char {
         &mut *tree
     };
 
-    let root: BigInt = tree.0.root().into();
-    CString::new(root.to_str_radix(10)).unwrap().into_raw()
+    CString::new(tree.0.root().to_string()).unwrap().into_raw()
 }
 
 /// Generates merkle proof for given leaf index
@@ -256,6 +256,19 @@ pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *
     let json = serde_json::to_string(&proof.0).unwrap();
 
     CString::new(json).unwrap().into_raw()
+}
+
+/// Initializes the witness generator path (only needed on iOS for the dylib path)
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn init_witness_generator_path(path: *const c_char) {
+    let c_str = unsafe { CStr::from_ptr(path) };
+    let path = match c_str.to_str() {
+        Err(_) => "there",
+        Ok(string) => string,
+    };
+
+    circuit::WITNESS_CALCULATOR_DYLIB.set(path.to_string()).expect("init must only be called once");
 }
 
 #[cfg(test)]
