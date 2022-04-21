@@ -2481,7 +2481,7 @@ checksum = "3d958d035c4438e28c70e4321a2911302f10135ce78a9c7834c0cab4123d06a2"
 [[package]]
 name = "wasmer"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "cfg-if",
  "indexmap",
@@ -2506,7 +2506,7 @@ dependencies = [
 [[package]]
 name = "wasmer-compiler"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "enumset",
  "loupe",
@@ -2524,7 +2524,7 @@ dependencies = [
 [[package]]
 name = "wasmer-compiler-cranelift"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "cranelift-codegen",
  "cranelift-entity",
@@ -2544,7 +2544,7 @@ dependencies = [
 [[package]]
 name = "wasmer-derive"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -2555,7 +2555,7 @@ dependencies = [
 [[package]]
 name = "wasmer-engine"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "backtrace",
  "enumset",
@@ -2576,7 +2576,7 @@ dependencies = [
 [[package]]
 name = "wasmer-engine-dylib"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "cfg-if",
  "enum-iterator",
@@ -2600,7 +2600,7 @@ dependencies = [
 [[package]]
 name = "wasmer-engine-universal"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "cfg-if",
  "enum-iterator",
@@ -2619,7 +2619,7 @@ dependencies = [
 [[package]]
 name = "wasmer-object"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "object 0.28.3",
  "thiserror",
@@ -2630,7 +2630,7 @@ dependencies = [
 [[package]]
 name = "wasmer-types"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "indexmap",
  "loupe",
@@ -2642,7 +2642,7 @@ dependencies = [
 [[package]]
 name = "wasmer-vm"
 version = "2.2.1"
-source = "git+https://github.com/philsippl/wasmer?rev=6ad557a#6ad557a291e85c8d9a5dc0730139395342addb5c"
+source = "git+https://github.com/philsippl/wasmer?rev=9d782a3#9d782a3ebc3eec9e28a9776732d48b7dfe945ef7"
 dependencies = [
  "backtrace",
  "cc",
