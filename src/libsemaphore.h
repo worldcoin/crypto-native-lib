@@ -53,7 +53,7 @@ struct CMerkleProofPoseidonHash *get_merkle_proof(struct CPoseidonTree *tree, in
  */
 struct CGroth16Proof *generate_proof(struct CIdentity *identity,
                                      const char *external_nullifier_hash,
-                                     const char *signal_hash,
+                                     const char *signal,
                                      struct CMerkleProofPoseidonHash *merkle_proof);
 
 /**
@@ -76,6 +76,7 @@ struct CMerkleProofPoseidonHash *deserialize_merkle_proof(const char *json);
 const char *serialize_groth16_proof(struct CGroth16Proof *proof);
 
 /**
- * Initializes the witness generator path (only needed on iOS for the dylib path)
+ * Initializes the witness generator path (only needed on iOS for the dylib
+ * path)
  */
 void init_witness_generator_path(const char *path);

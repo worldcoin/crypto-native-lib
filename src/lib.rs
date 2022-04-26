@@ -5,12 +5,12 @@ use std::{
 };
 
 use semaphore::{
+    circuit::{self},
     hash_to_field,
     identity::Identity,
     merkle_tree::{self},
     poseidon_tree::{Branch, PoseidonHash, PoseidonTree},
     protocol::{self},
-    circuit::{self},
     Field,
 };
 
@@ -147,7 +147,7 @@ pub unsafe extern "C" fn get_merkle_proof(
 pub unsafe extern "C" fn generate_proof(
     identity: *mut CIdentity,
     external_nullifier_hash: *const c_char,
-    signal_hash: *const c_char,
+    signal: *const c_char,
     merkle_proof: *mut CMerkleProofPoseidonHash,
 ) -> *mut CGroth16Proof {
     let c_str = unsafe { CStr::from_ptr(external_nullifier_hash) };
@@ -158,13 +158,13 @@ pub unsafe extern "C" fn generate_proof(
     let external_nullifier_hash =
         Field::from_str(external_nullifier_hash).expect("parse as field element");
 
-    let c_str = unsafe { CStr::from_ptr(signal_hash) };
-    let signal_hash = match c_str.to_str() {
+    let c_str = unsafe { CStr::from_ptr(signal) };
+    let signal = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
-    let signal_hash =
-        Field::from_str(signal_hash).expect("parse as field element");
+
+    let signal_hash = hash_to_field(hex::decode(signal).expect("decode signal as hex"));
 
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
@@ -244,8 +244,9 @@ pub unsafe extern "C" fn deserialize_merkle_proof(
     };
 
     let tmp: Vec<Branch> = serde_json::from_str(json).unwrap();
-    let boxed: Box<CMerkleProofPoseidonHash> =
-        Box::new(CMerkleProofPoseidonHash(merkle_tree::Proof::<PoseidonHash>(tmp)));
+    let boxed: Box<CMerkleProofPoseidonHash> = Box::new(CMerkleProofPoseidonHash(
+        merkle_tree::Proof::<PoseidonHash>(tmp),
+    ));
     Box::into_raw(boxed)
 }
 
@@ -259,7 +260,8 @@ pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *
     CString::new(json).unwrap().into_raw()
 }
 
-/// Initializes the witness generator path (only needed on iOS for the dylib path)
+/// Initializes the witness generator path (only needed on iOS for the dylib
+/// path)
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn init_witness_generator_path(path: *const c_char) {
@@ -269,7 +271,9 @@ pub unsafe extern "C" fn init_witness_generator_path(path: *const c_char) {
         Ok(string) => string,
     };
 
-    circuit::WITNESS_CALCULATOR_DYLIB.set(path.to_string()).expect("init must only be called once");
+    circuit::WITNESS_CALCULATOR_DYLIB
+        .set(path.to_string())
+        .expect("init must only be called once");
 }
 
 #[cfg(test)]
