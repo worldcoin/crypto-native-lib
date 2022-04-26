@@ -147,7 +147,7 @@ pub unsafe extern "C" fn get_merkle_proof(
 pub unsafe extern "C" fn generate_proof(
     identity: *mut CIdentity,
     external_nullifier_hash: *const c_char,
-    signal: *const c_char,
+    signal_hash: *const c_char,
     merkle_proof: *mut CMerkleProofPoseidonHash,
 ) -> *mut CGroth16Proof {
     let c_str = unsafe { CStr::from_ptr(external_nullifier_hash) };
@@ -158,12 +158,13 @@ pub unsafe extern "C" fn generate_proof(
     let external_nullifier_hash =
         Field::from_str(external_nullifier_hash).expect("parse as field element");
 
-    let c_str = unsafe { CStr::from_ptr(signal) };
-    let signal = match c_str.to_str() {
+    let c_str = unsafe { CStr::from_ptr(signal_hash) };
+    let signal_hash = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
-    let signal_hash = hash_to_field(signal.as_bytes());
+    let signal_hash =
+        Field::from_str(signal_hash).expect("parse as field element");
 
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
