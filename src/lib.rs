@@ -163,7 +163,7 @@ pub unsafe extern "C" fn generate_proof(
         Ok(string) => string,
     };
 
-    let signal_hash = hash_to_field(hex::decode(signal).expect("decode signal as hex"));
+    let signal_hash = hash_to_field(&hex::decode(signal).expect("decode signal as hex"));
 
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
