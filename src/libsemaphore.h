@@ -53,7 +53,7 @@ struct CMerkleProofPoseidonHash *get_merkle_proof(struct CPoseidonTree *tree, in
  */
 struct CGroth16Proof *generate_proof(struct CIdentity *identity,
                                      const char *external_nullifier_hash,
-                                     const char *signal_hash,
+                                     const char *signal,
                                      struct CMerkleProofPoseidonHash *merkle_proof);
 
 /**
