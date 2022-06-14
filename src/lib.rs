@@ -2,19 +2,18 @@ use std::{
     ffi::{CStr, CString},
     os::raw::{c_char, c_int},
     str::FromStr,
+    path::Path,
 };
 
 use semaphore::{
-    circuit::{self},
     hash_to_field,
     identity::Identity,
+    initialize,
     merkle_tree::{self},
     poseidon_tree::{Branch, PoseidonHash, PoseidonTree},
     protocol::{self},
     Field,
 };
-
-use num_bigint::BigInt;
 
 // wrap all types for cbindgen
 pub struct CIdentity(Identity);
@@ -260,6 +259,16 @@ pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *
     CString::new(json).unwrap().into_raw()
 }
 
+/// Encode groth16 proof packed
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn encode_proof_packed(proof: *mut CGroth16Proof) -> *const c_char {
+    let proof = &*proof;
+    let packed_proof = protocol::PackedProof::from(proof.0);
+
+    CString::new(format!("{}", packed_proof)).unwrap().into_raw()
+}
+
 /// Initializes the witness generator path (only needed on iOS for the dylib
 /// path)
 #[no_mangle]
@@ -271,9 +280,7 @@ pub unsafe extern "C" fn init_witness_generator_path(path: *const c_char) {
         Ok(string) => string,
     };
 
-    circuit::WITNESS_CALCULATOR_DYLIB
-        .set(path.to_string())
-        .expect("init must only be called once");
+    initialize(Path::new(&path));
 }
 
 #[cfg(test)]
