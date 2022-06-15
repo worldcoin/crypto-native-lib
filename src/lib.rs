@@ -161,7 +161,8 @@ pub unsafe extern "C" fn generate_proof(
         Err(_) => "there",
         Ok(string) => string,
     };
-    let signal_hash = semaphore::hash_to_field(&hex::decode(signal_hash).expect("decode signal as hex"));
+    let signal_hash =
+        Field::from_str(signal_hash).expect("parse as field element");
 
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
@@ -207,7 +208,8 @@ pub unsafe extern "C" fn verify_proof(
         Err(_) => "there",
         Ok(string) => string,
     };
-    let signal_hash = semaphore::hash_to_field(&hex::decode(signal_hash).expect("decode signal as hex"));
+    let signal_hash =
+        Field::from_str(signal_hash).expect("parse as field element");
 
     let c_str = unsafe { CStr::from_ptr(nullifier) };
     let nullifier = match c_str.to_str() {
