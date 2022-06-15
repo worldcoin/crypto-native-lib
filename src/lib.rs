@@ -72,14 +72,14 @@ pub unsafe extern "C" fn generate_nullifier_hash(
 /// Generates nullifier hash based on identity and external nullifier
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn hash_to_field(hash_to_field: *const c_char) -> *mut c_char {
-    let c_str = unsafe { CStr::from_ptr(hash_to_field) };
-    let hash_to_field = match c_str.to_str() {
+pub unsafe extern "C" fn hash_to_field(input_str: *const c_char) -> *mut c_char {
+    let c_str = unsafe { CStr::from_ptr(input_str) };
+    let input_str = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
 
-    CString::new(semaphore::hash_to_field(hash_to_field.as_bytes()).to_string())
+    CString::new(semaphore::hash_to_field(input_str.as_bytes()).to_string())
         .unwrap()
         .into_raw()
 }
