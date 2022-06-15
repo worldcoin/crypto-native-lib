@@ -5,7 +5,6 @@ use std::{
 };
 
 use semaphore::{
-    hash_to_field,
     identity::Identity,
     merkle_tree::{self},
     poseidon_tree::{Branch, PoseidonHash, PoseidonTree},
@@ -73,14 +72,14 @@ pub unsafe extern "C" fn generate_nullifier_hash(
 /// Generates nullifier hash based on identity and external nullifier
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn hash_external_nullifier(external_nullifier: *const c_char) -> *mut c_char {
-    let c_str = unsafe { CStr::from_ptr(external_nullifier) };
-    let external_nullifier = match c_str.to_str() {
+pub unsafe extern "C" fn hash_to_field(hash_to_field: *const c_char) -> *mut c_char {
+    let c_str = unsafe { CStr::from_ptr(hash_to_field) };
+    let hash_to_field = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
 
-    CString::new(hash_to_field(external_nullifier.as_bytes()).to_string())
+    CString::new(semaphore::hash_to_field(hash_to_field.as_bytes()).to_string())
         .unwrap()
         .into_raw()
 }
@@ -146,7 +145,7 @@ pub unsafe extern "C" fn get_merkle_proof(
 pub unsafe extern "C" fn generate_proof(
     identity: *mut CIdentity,
     external_nullifier_hash: *const c_char,
-    signal: *const c_char,
+    signal_hash: *const c_char,
     merkle_proof: *mut CMerkleProofPoseidonHash,
 ) -> *mut CGroth16Proof {
     let c_str = unsafe { CStr::from_ptr(external_nullifier_hash) };
@@ -157,13 +156,12 @@ pub unsafe extern "C" fn generate_proof(
     let external_nullifier_hash =
         Field::from_str(external_nullifier_hash).expect("parse as field element");
 
-    let c_str = unsafe { CStr::from_ptr(signal) };
-    let signal = match c_str.to_str() {
+    let c_str = unsafe { CStr::from_ptr(signal_hash) };
+    let signal_hash = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
-
-    let signal_hash = hash_to_field(&hex::decode(signal).expect("decode signal as hex"));
+    let signal_hash = semaphore::hash_to_field(&hex::decode(signal_hash).expect("decode signal as hex"));
 
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
@@ -185,7 +183,7 @@ pub unsafe extern "C" fn generate_proof(
 pub unsafe extern "C" fn verify_proof(
     root: *const c_char,
     external_nullifier_hash: *const c_char,
-    signal: *const c_char,
+    signal_hash: *const c_char,
     nullifier: *const c_char,
     proof: *mut CGroth16Proof,
 ) -> c_int {
@@ -204,12 +202,12 @@ pub unsafe extern "C" fn verify_proof(
     let external_nullifier_hash =
         Field::from_str(external_nullifier_hash).expect("parse as field element");
 
-    let c_str = unsafe { CStr::from_ptr(signal) };
-    let signal = match c_str.to_str() {
+    let c_str = unsafe { CStr::from_ptr(signal_hash) };
+    let signal_hash = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
-    let signal_hash = hash_to_field(signal.as_bytes());
+    let signal_hash = semaphore::hash_to_field(&hex::decode(signal_hash).expect("decode signal as hex"));
 
     let c_str = unsafe { CStr::from_ptr(nullifier) };
     let nullifier = match c_str.to_str() {
