@@ -26,7 +26,7 @@ char *generate_nullifier_hash(struct CIdentity *identity, const char *external_n
 /**
  * Generates nullifier hash based on identity and external nullifier
  */
-char *hash_external_nullifier(const char *external_nullifier);
+char *hash_to_field(const char *input_str);
 
 /**
  * Initializes new poseidon tree of given depth
@@ -61,7 +61,7 @@ struct CGroth16Proof *generate_proof(struct CIdentity *identity,
  */
 int verify_proof(const char *root,
                  const char *external_nullifier_hash,
-                 const char *signal,
+                 const char *signal_hash,
                  const char *nullifier,
                  struct CGroth16Proof *proof);
 
