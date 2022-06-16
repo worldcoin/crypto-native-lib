@@ -40,7 +40,7 @@ pub unsafe extern "C" fn new_identity(seed: *const c_char) -> *mut CIdentity {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn generate_identity_commitment(identity: *mut CIdentity) -> *mut c_char {
     let identity = &*identity;
-    CString::new(identity.0.commitment().to_string())
+    CString::new(format!("{}", identity.0.commitment()))
         .unwrap()
         .into_raw()
 }
