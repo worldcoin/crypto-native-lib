@@ -40,7 +40,7 @@ pub unsafe extern "C" fn new_identity(seed: *const c_char) -> *mut CIdentity {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn generate_identity_commitment(identity: *mut CIdentity) -> *mut c_char {
     let identity = &*identity;
-    CString::new(identity.0.commitment().to_string())
+    CString::new(format!("{}", identity.0.commitment()))
         .unwrap()
         .into_raw()
 }
@@ -273,9 +273,15 @@ pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *
 
 #[cfg(test)]
 mod tests {
+    use semaphore::identity::Identity;
+
     #[test]
     fn it_works() {
         let result = 2 + 2;
         assert_eq!(result, 4);
+
+        let id = Identity::from_seed(b"xxx");
+        let x = format!("{}", id.commitment());
+        dbg!(x);
     }
 }
