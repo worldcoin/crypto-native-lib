@@ -40,7 +40,7 @@ pub unsafe extern "C" fn new_identity(seed: *const c_char) -> *mut CIdentity {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn generate_identity_commitment(identity: *mut CIdentity) -> *mut c_char {
     let identity = &*identity;
-    CString::new(format!("{}", identity.0.commitment()))
+    CString::new(format!("{:#04x}", identity.0.commitment()))
         .unwrap()
         .into_raw()
 }
@@ -62,11 +62,11 @@ pub unsafe extern "C" fn generate_nullifier_hash(
     let external_nullifier_hash =
         Field::from_str(external_nullifier_hash).expect("parse as field element");
 
-    CString::new(
-        protocol::generate_nullifier_hash(&identity.0, external_nullifier_hash).to_string(),
-    )
-    .unwrap()
-    .into_raw()
+    let field = protocol::generate_nullifier_hash(&identity.0, external_nullifier_hash);
+
+    CString::new(format!("{:#04x}", field))
+        .unwrap()
+        .into_raw()
 }
 
 /// Generates nullifier hash based on identity and external nullifier
@@ -79,7 +79,9 @@ pub unsafe extern "C" fn hash_to_field(input_str: *const c_char) -> *mut c_char 
         Ok(string) => string,
     };
 
-    CString::new(semaphore::hash_to_field(input_str.as_bytes()).to_string())
+    let field = semaphore::hash_to_field(input_str.as_bytes());
+
+    CString::new(format!("{:#04x}", field))
         .unwrap()
         .into_raw()
 }
