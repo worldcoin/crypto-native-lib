@@ -12,7 +12,7 @@ use semaphore::{
     Field,
 };
 
-use rand_chacha::ChaChaRng;
+use rand_chacha::{ChaChaRng, rand_core::SeedableRng};
 
 // wrap all types for cbindgen
 pub struct CIdentity(Identity);
@@ -178,7 +178,7 @@ pub unsafe extern "C" fn generate_proof(
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
 
-    let mut rng = ChaChaRng::seed_from_u64(123);
+    let mut rng = ChaChaRng::seed_from_u64(123_u64);
 
     let res = protocol::generate_proof_rng(
         &identity.0,
