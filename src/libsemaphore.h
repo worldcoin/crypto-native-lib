@@ -24,9 +24,14 @@ char *generate_identity_commitment(struct CIdentity *identity);
 char *generate_nullifier_hash(struct CIdentity *identity, const char *external_nullifier_hash);
 
 /**
- * Generates nullifier hash based on identity and external nullifier
+ * Hashes a byte string (given as hex) to the field
  */
-char *hash_to_field(const char *hash_to_field);
+char *hash_bytes_to_field(const char *hex_str);
+
+/**
+ * Hashes a given string to the field
+ */
+char *hash_string_to_field(const char *input_str);
 
 /**
  * Initializes new poseidon tree of given depth
@@ -74,3 +79,8 @@ struct CMerkleProofPoseidonHash *deserialize_merkle_proof(const char *json);
  * Serialize groth16 proof
  */
 const char *serialize_groth16_proof(struct CGroth16Proof *proof);
+
+/**
+ * Encode groth16 proof packed
+ */
+const char *encode_proof_packed(struct CGroth16Proof *proof);

@@ -12,8 +12,6 @@ use semaphore::{
     Field,
 };
 
-use num_bigint::BigInt;
-
 // wrap all types for cbindgen
 pub struct CIdentity(Identity);
 pub struct CPoseidonTree(PoseidonTree);
@@ -40,7 +38,7 @@ pub unsafe extern "C" fn new_identity(seed: *const c_char) -> *mut CIdentity {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn generate_identity_commitment(identity: *mut CIdentity) -> *mut c_char {
     let identity = &*identity;
-    CString::new(format!("{}", identity.0.commitment()))
+    CString::new(format!("{:#04x}", identity.0.commitment()))
         .unwrap()
         .into_raw()
 }
@@ -62,26 +60,38 @@ pub unsafe extern "C" fn generate_nullifier_hash(
     let external_nullifier_hash =
         Field::from_str(external_nullifier_hash).expect("parse as field element");
 
-    CString::new(
-        protocol::generate_nullifier_hash(&identity.0, external_nullifier_hash).to_string(),
-    )
-    .unwrap()
-    .into_raw()
+    let field = protocol::generate_nullifier_hash(&identity.0, external_nullifier_hash);
+
+    CString::new(format!("{:#04x}", field)).unwrap().into_raw()
 }
 
-/// Generates nullifier hash based on identity and external nullifier
+/// Hashes a byte string (given as hex) to the field
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn hash_to_field(input_str: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn hash_bytes_to_field(hex_str: *const c_char) -> *mut c_char {
+    let c_str = unsafe { CStr::from_ptr(hex_str) };
+    let hex_str = match c_str.to_str() {
+        Err(_) => "there",
+        Ok(string) => string,
+    };
+    let input = hex::decode(hex_str.replace("0x", "")).unwrap();
+    let field = semaphore::hash_to_field(&input);
+
+    CString::new(format!("{:#04x}", field)).unwrap().into_raw()
+}
+
+/// Hashes a given string to the field
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn hash_string_to_field(input_str: *const c_char) -> *mut c_char {
     let c_str = unsafe { CStr::from_ptr(input_str) };
     let input_str = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
+    let field = semaphore::hash_to_field(input_str.as_bytes());
 
-    CString::new(semaphore::hash_to_field(input_str.as_bytes()).to_string())
-        .unwrap()
-        .into_raw()
+    CString::new(format!("{:#04x}", field)).unwrap().into_raw()
 }
 
 /// Initializes new poseidon tree of given depth
@@ -161,8 +171,7 @@ pub unsafe extern "C" fn generate_proof(
         Err(_) => "there",
         Ok(string) => string,
     };
-    let signal_hash =
-        Field::from_str(signal_hash).expect("parse as field element");
+    let signal_hash = Field::from_str(signal_hash).expect("parse as field element");
 
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
@@ -208,8 +217,7 @@ pub unsafe extern "C" fn verify_proof(
         Err(_) => "there",
         Ok(string) => string,
     };
-    let signal_hash =
-        Field::from_str(signal_hash).expect("parse as field element");
+    let signal_hash = Field::from_str(signal_hash).expect("parse as field element");
 
     let c_str = unsafe { CStr::from_ptr(nullifier) };
     let nullifier = match c_str.to_str() {
@@ -243,8 +251,9 @@ pub unsafe extern "C" fn deserialize_merkle_proof(
     };
 
     let tmp: Vec<Branch> = serde_json::from_str(json).unwrap();
-    let boxed: Box<CMerkleProofPoseidonHash> =
-        Box::new(CMerkleProofPoseidonHash(merkle_tree::Proof::<PoseidonHash>(tmp)));
+    let boxed: Box<CMerkleProofPoseidonHash> = Box::new(CMerkleProofPoseidonHash(
+        merkle_tree::Proof::<PoseidonHash>(tmp),
+    ));
     Box::into_raw(boxed)
 }
 
@@ -258,30 +267,126 @@ pub unsafe extern "C" fn serialize_groth16_proof(proof: *mut CGroth16Proof) -> *
     CString::new(json).unwrap().into_raw()
 }
 
-/// Initializes the witness generator path (only needed on iOS for the dylib path)
-// #[no_mangle]
-// #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn init_witness_generator_path(path: *const c_char) {
-//     let c_str = unsafe { CStr::from_ptr(path) };
-//     let path = match c_str.to_str() {
-//         Err(_) => "there",
-//         Ok(string) => string,
-//     };
+/// Encode groth16 proof packed
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn encode_proof_packed(proof: *mut CGroth16Proof) -> *const c_char {
+    let proof = &*proof;
+    let packed_proof = protocol::PackedProof::from(proof.0);
 
-//     circuit::WITNESS_CALCULATOR_DYLIB.set(path.to_string()).expect("init must only be called once");
-// }
+    CString::new(format!("{}", packed_proof))
+        .unwrap()
+        .into_raw()
+}
 
 #[cfg(test)]
 mod tests {
-    use semaphore::identity::Identity;
+    use std::{
+        ffi::{CStr, CString},
+        str::FromStr,
+    };
+
+    use semaphore::{identity::{Identity, self}, Field};
+
+    use crate::{
+        deserialize_merkle_proof, generate_identity_commitment, generate_nullifier_hash,
+        generate_proof, hash_bytes_to_field, new_identity, verify_proof, serialize_groth16_proof,
+    };
 
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn generate_id_comm() {
+        let id_comm_string = unsafe {
+            let seed = CString::new("hello_xxx").unwrap().into_raw();
 
-        let id = Identity::from_seed(b"xxx");
-        let x = format!("{}", id.commitment());
-        dbg!(x);
+            let identity_ptr = new_identity(seed);
+            let id_comm = generate_identity_commitment(identity_ptr);
+            let id_comm_ptr = CStr::from_ptr(id_comm);
+            let id_comm_string = id_comm_ptr.to_str().unwrap();
+            id_comm_string
+        };
+
+        println!("{}", id_comm_string);
+        assert_eq!(
+            format!("{}", id_comm_string),
+            "0x2405c7f5f0563769cf09f3e5806857109de43524bb0e52ba505fafcfd1871347"
+        );
+    }
+
+    /// tests proof generation e2e
+    /// IMPORTANT: remove features = ["dylib"] from semaphore to run this test
+    #[test]
+    fn e2e_test() {
+        let merkle_root_str = "0x109630dc34d2beda3ba90e7016cfa71fc187e37a3e11598cf69aa0bdec0ab45e";
+
+        let merkle_root = unsafe {
+            CString::new(merkle_root_str)
+                .unwrap()
+                .into_raw()
+        };
+
+        let merkle_proof = unsafe {
+            let merkle_proof_json = r#"[{"Left":"0x0000000000000000000000000000000000000000000000000000000000000000"},{"Left":"0x2098f5fb9e239eab3ceac3f27b81e481dc3124d55ffed523a839ee8446b64864"},{"Right":"0x1215dc5f76a7aa05e47b0bd502c9739f914b6a74ff1394e76f3ee09a43a5a67a"},{"Left":"0x18f43331537ee2af2e3d758d50f72106467c6eea50371dd528d57eb2b856d238"},{"Right":"0x2d11617349c253639b5826b4d74a2318c661256986188f06660dd3e899e94524"},{"Left":"0x2b94cf5e8746b3f5c9631f4c5df32907a699c58c94b2ad4d7b5cec1639183f55"},{"Left":"0x2dee93c5a666459646ea7d22cca9e1bcfed71e6951b953611d11dda32ea09d78"},{"Right":"0x276723e66059167837e3d20d1fd74202af8e17603ed7ea8087b543a16922d3f6"},{"Right":"0x0b9851a0ec93192e67da6e9367e69727323729411449818918b141f30e50da39"},{"Right":"0x207732400560e94e5ef329a7da2998db6af43bf4c092a7efc6b38545c15d67a2"},{"Left":"0x1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2"},{"Right":"0x0127a3b78cd00628d626feb777db866ab147f78fdc13d8c8d42ad098827f9a9e"},{"Left":"0x2c5d82f66c914bafb9701589ba8cfcfb6162b0a12acf88a8d0879a0471b5f85a"},{"Left":"0x14c54148a0940bb820957f5adf3fa1134ef5c4aaa113f4646458f270e0bfbfd0"},{"Left":"0x190d33b12f986f961e10c0ee44d8b9af11be25588cad89d416118e4bf4ebe80c"},{"Left":"0x22f98aa9ce704152ac17354914ad73ed1167ae6596af510aa5b3649325e06c92"},{"Left":"0x2a7c7c9b6ce5880b9f6f228d72bf6a575a526f29c66ecceef8b753d38bba7323"},{"Left":"0x2e8186e558698ec1c67af9c14d463ffc470043c9c2988b954d75dd643f36b992"},{"Left":"0x0f57c5571e9a4eab49e2c8cf050dae948aef6ead647392273546249d1c1ff10f"},{"Left":"0x1830ee67b5fb554ad5f63d4388800e1cfe78e310697d46e43c9ce36134f72cca"}]"#;
+            let merkle_proof_str = CString::new(merkle_proof_json).unwrap().into_raw();
+            deserialize_merkle_proof(merkle_proof_str)
+        };
+
+        let identity = unsafe {
+            let seed = CString::new("hello_xxx").unwrap().into_raw();
+            new_identity(seed)
+        };
+
+        let identity_commitment = unsafe {
+            let id_comm = generate_identity_commitment(identity);
+            let id_comm_ptr = CStr::from_ptr(id_comm);
+            let id_comm_string = id_comm_ptr.to_str().unwrap();
+            id_comm_string
+        };
+
+        let external_nullifier_hash = unsafe {
+            CString::new("0x0046a9ddb149db600304d000ce3a3cfabde52070ae4b77504e17af77eeb6011e")
+                .unwrap()
+                .into_raw()
+        };
+
+        let signal_hash = unsafe {
+            let signal = CString::new("8d9a83E7654083F1ed763bBd5D76B5848b05Dc28").unwrap().into_raw();
+            hash_bytes_to_field(signal)
+        };
+
+        let proof =
+            unsafe { generate_proof(identity, external_nullifier_hash, signal_hash, merkle_proof) };
+
+        let nullifier = unsafe { generate_nullifier_hash(identity, external_nullifier_hash) };
+
+        let nullifier_str = unsafe {
+            let nullifier_ptr = CStr::from_ptr(nullifier);
+            nullifier_ptr.to_str().unwrap()
+        };
+
+        let result = unsafe {
+            verify_proof(
+                merkle_root,
+                external_nullifier_hash,
+                signal_hash,
+                nullifier,
+                proof,
+            )
+        };
+
+        // the proof needs to verify 
+        assert_eq!(
+            result,
+            1
+        );
+
+        let serialized_proof = unsafe {
+            let json = serialize_groth16_proof(proof);
+            let json_ptr = CStr::from_ptr(json);
+            let json_string = json_ptr.to_str().unwrap();
+            format!("[{}]", json_string.replace("[", "").replace("]", ""))
+        };
+
+        println!("id: {}\nroot: {}\nnullifierHash: {}\nproof: {}", identity_commitment, merkle_root_str, nullifier_str, serialized_proof);
+
     }
 }
