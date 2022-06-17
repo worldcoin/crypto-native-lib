@@ -24,9 +24,14 @@ char *generate_identity_commitment(struct CIdentity *identity);
 char *generate_nullifier_hash(struct CIdentity *identity, const char *external_nullifier_hash);
 
 /**
- * Generates nullifier hash based on identity and external nullifier
+ * Hashes a byte string (given as hex) to the field
  */
-char *hash_to_field(const char *input_str);
+char *hash_bytes_to_field(const char *hex_str);
+
+/**
+ * Hashes a byte string (given as hex) to the field
+ */
+char *hash_string_to_field(const char *input_str);
 
 /**
  * Initializes new poseidon tree of given depth
