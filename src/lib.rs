@@ -12,6 +12,8 @@ use semaphore::{
     Field,
 };
 
+use rand_chacha::ChaChaRng;
+
 // wrap all types for cbindgen
 pub struct CIdentity(Identity);
 pub struct CPoseidonTree(PoseidonTree);
@@ -176,11 +178,14 @@ pub unsafe extern "C" fn generate_proof(
     let identity = &*identity;
     let merkle_proof = &*merkle_proof;
 
-    let res = protocol::generate_proof(
+    let mut rng = ChaChaRng::seed_from_u64(123);
+
+    let res = protocol::generate_proof_rng(
         &identity.0,
         &merkle_proof.0,
         external_nullifier_hash,
         signal_hash,
+        &mut rng
     );
 
     let boxed: Box<CGroth16Proof> = Box::new(CGroth16Proof(res.unwrap()));
@@ -296,7 +301,7 @@ mod tests {
     #[test]
     fn generate_id_comm() {
         let id_comm_string = unsafe {
-            let seed = CString::new("hello_xxx").unwrap().into_raw();
+            let seed = CString::new("b3e52543571b7a98d004f2eedc431c40a7be7454f39187394b211a4da1d3f5b6").unwrap().into_raw();
 
             let identity_ptr = new_identity(seed);
             let id_comm = generate_identity_commitment(identity_ptr);
@@ -316,7 +321,7 @@ mod tests {
     /// IMPORTANT: remove features = ["dylib"] from semaphore to run this test
     #[test]
     fn e2e_test() {
-        let merkle_root_str = "0x1194c4103245f5f4e871330ed98da6696bfb421cf0b00e060d6258a3cfcb9de6";
+        let merkle_root_str = "0x01d0f8b71395e5034e75a10a28cd709216122e0bb8330a0ed55ea6966ecd9638";
 
         let merkle_root = unsafe {
             CString::new(merkle_root_str)
@@ -325,13 +330,13 @@ mod tests {
         };
 
         let merkle_proof = unsafe {
-            let merkle_proof_json = r#"[{"Left":"0x0000000000000000000000000000000000000000000000000000000000000000"},{"Left":"0x2098f5fb9e239eab3ceac3f27b81e481dc3124d55ffed523a839ee8446b64864"},{"Left":"0x1069673dcdb12263df301a6ff584a7ec261a44cb9dc68df067a4774460b1f1e1"},{"Left":"0x18f43331537ee2af2e3d758d50f72106467c6eea50371dd528d57eb2b856d238"},{"Left":"0x07f9d837cb17b0d36320ffe93ba52345f1b728571a568265caac97559dbc952a"},{"Right":"0x1ab79cd3da4e4aaf07537789afba5ad7bcc11cd590f2ac262e56e9fa187fff66"},{"Left":"0x2dee93c5a666459646ea7d22cca9e1bcfed71e6951b953611d11dda32ea09d78"},{"Right":"0x276723e66059167837e3d20d1fd74202af8e17603ed7ea8087b543a16922d3f6"},{"Right":"0x0b9851a0ec93192e67da6e9367e69727323729411449818918b141f30e50da39"},{"Right":"0x207732400560e94e5ef329a7da2998db6af43bf4c092a7efc6b38545c15d67a2"},{"Left":"0x1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2"},{"Right":"0x0127a3b78cd00628d626feb777db866ab147f78fdc13d8c8d42ad098827f9a9e"},{"Left":"0x2c5d82f66c914bafb9701589ba8cfcfb6162b0a12acf88a8d0879a0471b5f85a"},{"Left":"0x14c54148a0940bb820957f5adf3fa1134ef5c4aaa113f4646458f270e0bfbfd0"},{"Left":"0x190d33b12f986f961e10c0ee44d8b9af11be25588cad89d416118e4bf4ebe80c"},{"Left":"0x22f98aa9ce704152ac17354914ad73ed1167ae6596af510aa5b3649325e06c92"},{"Left":"0x2a7c7c9b6ce5880b9f6f228d72bf6a575a526f29c66ecceef8b753d38bba7323"},{"Left":"0x2e8186e558698ec1c67af9c14d463ffc470043c9c2988b954d75dd643f36b992"},{"Left":"0x0f57c5571e9a4eab49e2c8cf050dae948aef6ead647392273546249d1c1ff10f"},{"Left":"0x1830ee67b5fb554ad5f63d4388800e1cfe78e310697d46e43c9ce36134f72cca"}]"#;
+            let merkle_proof_json = r#"[{"Right":"0x21a8624a88ce1f4323f45482c35d0a3b277984dadf6219b4e2f619eaa1dbd530"},{"Left":"0x18f3dbd815405e2cbf3a0a9501d926762e39331734bf5797735f17ad7ceee1cf"},{"Left":"0x1069673dcdb12263df301a6ff584a7ec261a44cb9dc68df067a4774460b1f1e1"},{"Left":"0x18f43331537ee2af2e3d758d50f72106467c6eea50371dd528d57eb2b856d238"},{"Left":"0x07f9d837cb17b0d36320ffe93ba52345f1b728571a568265caac97559dbc952a"},{"Right":"0x1ab79cd3da4e4aaf07537789afba5ad7bcc11cd590f2ac262e56e9fa187fff66"},{"Left":"0x2dee93c5a666459646ea7d22cca9e1bcfed71e6951b953611d11dda32ea09d78"},{"Right":"0x276723e66059167837e3d20d1fd74202af8e17603ed7ea8087b543a16922d3f6"},{"Right":"0x0b9851a0ec93192e67da6e9367e69727323729411449818918b141f30e50da39"},{"Right":"0x207732400560e94e5ef329a7da2998db6af43bf4c092a7efc6b38545c15d67a2"},{"Left":"0x1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2"},{"Right":"0x0127a3b78cd00628d626feb777db866ab147f78fdc13d8c8d42ad098827f9a9e"},{"Left":"0x2c5d82f66c914bafb9701589ba8cfcfb6162b0a12acf88a8d0879a0471b5f85a"},{"Left":"0x14c54148a0940bb820957f5adf3fa1134ef5c4aaa113f4646458f270e0bfbfd0"},{"Left":"0x190d33b12f986f961e10c0ee44d8b9af11be25588cad89d416118e4bf4ebe80c"},{"Left":"0x22f98aa9ce704152ac17354914ad73ed1167ae6596af510aa5b3649325e06c92"},{"Left":"0x2a7c7c9b6ce5880b9f6f228d72bf6a575a526f29c66ecceef8b753d38bba7323"},{"Left":"0x2e8186e558698ec1c67af9c14d463ffc470043c9c2988b954d75dd643f36b992"},{"Left":"0x0f57c5571e9a4eab49e2c8cf050dae948aef6ead647392273546249d1c1ff10f"},{"Left":"0x1830ee67b5fb554ad5f63d4388800e1cfe78e310697d46e43c9ce36134f72cca"}]"#;
             let merkle_proof_str = CString::new(merkle_proof_json).unwrap().into_raw();
             deserialize_merkle_proof(merkle_proof_str)
         };
 
         let identity = unsafe {
-            let seed = CString::new("hello_xxx1").unwrap().into_raw();
+            let seed = CString::new("b3e52543571b7a98d004f2eedc431c40a7be7454f39187394b211a4da1d3f5b6").unwrap().into_raw();
             new_identity(seed)
         };
 
@@ -350,7 +355,7 @@ mod tests {
 
         let signal_hash = unsafe {
             // let signal = CString::new("0x00a7465675d40ad7266f797cc68056c39699ccda8c1e9e0d79c2e016d5fdb01f").unwrap().into_raw();
-            CString::new("0x00a7465675d40ad7266f797cc68056c39699ccda8c1e9e0d79c2e016d5fdb01f").unwrap().into_raw()
+            CString::new("0x008952e32c69f70d214dd9c3960cc51bfe0789d0c51f4cfbb8d2863bdbc1c1f7").unwrap().into_raw()
             // hash_bytes_to_field(signal)
             
         };
