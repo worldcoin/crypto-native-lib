@@ -11,7 +11,7 @@ typedef struct CPoseidonTree CPoseidonTree;
 /**
  * Creates a new idenity and returns the object
  */
-struct CIdentity *new_identity(const char *seed);
+struct CIdentity *new_identity(const char *secret, const char *context);
 
 /**
  * Generates the identity commitment based on seed for identity
@@ -29,7 +29,7 @@ char *generate_nullifier_hash(struct CIdentity *identity, const char *external_n
 char *hash_bytes_to_field(const char *hex_str);
 
 /**
- * Hashes a byte string (given as hex) to the field
+ * Hashes a given string to the field
  */
 char *hash_string_to_field(const char *input_str);
 
