@@ -11,7 +11,7 @@ typedef struct CPoseidonTree CPoseidonTree;
 /**
  * Creates a new idenity and returns the object
  */
-struct CIdentity *new_identity(const char *seed);
+struct CIdentity *new_identity(const char *secret, const char *context);
 
 /**
  * Generates the identity commitment based on seed for identity

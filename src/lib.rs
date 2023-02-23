@@ -21,13 +21,24 @@ pub struct CGroth16Proof(protocol::Proof);
 /// Creates a new idenity and returns the object
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn new_identity(seed: *const c_char) -> *mut CIdentity {
-    let c_str = unsafe { CStr::from_ptr(seed) };
+pub unsafe extern "C" fn new_identity(
+    secret: *const c_char,
+    context: *const c_char,
+) -> *mut CIdentity {
+    let c_str = unsafe { CStr::from_ptr(secret) };
     let seed = match c_str.to_str() {
         Err(_) => "there",
         Ok(string) => string,
     };
-    let id = Identity::from_seed(seed.as_bytes());
+
+    let trapdoor_seed = if context.is_null() {
+        None
+    } else {
+        let c_str = unsafe { CStr::from_ptr(secret) };
+        Some(c_str.to_bytes())
+    };
+
+    let id = Identity::from_secret(seed.as_bytes(), trapdoor_seed);
 
     let boxed: Box<CIdentity> = Box::new(CIdentity(id));
     Box::into_raw(boxed)
@@ -297,8 +308,9 @@ mod tests {
     fn generate_id_comm() {
         let id_comm_string = unsafe {
             let seed = CString::new("hello_xxx").unwrap().into_raw();
+            let context = CString::new("test").unwrap().into_raw();
 
-            let identity_ptr = new_identity(seed);
+            let identity_ptr = new_identity(seed, context);
             let id_comm = generate_identity_commitment(identity_ptr);
             let id_comm_ptr = CStr::from_ptr(id_comm);
             let id_comm_string = id_comm_ptr.to_str().unwrap();
@@ -332,7 +344,8 @@ mod tests {
 
         let identity = unsafe {
             let seed = CString::new("hello_xxx1").unwrap().into_raw();
-            new_identity(seed)
+            let context = CString::new("test").unwrap().into_raw();
+            new_identity(seed, context)
         };
 
         let identity_commitment = unsafe {
