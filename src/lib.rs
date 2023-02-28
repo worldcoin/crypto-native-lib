@@ -13,8 +13,6 @@ use semaphore::{
     Field,
 };
 
-use semaphore::initialize;
-
 // wrap all types for cbindgen
 pub struct CIdentity(Identity);
 pub struct CPoseidonTree(PoseidonTree);
@@ -291,20 +289,6 @@ pub unsafe extern "C" fn encode_proof_packed(proof: *mut CGroth16Proof) -> *cons
     CString::new(format!("{}", packed_proof))
         .unwrap()
         .into_raw()
-}
-
-/// Initializes the witness generator path (only needed on iOS for the dylib
-/// path)
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn init_witness_generator_path(path: *const c_char) {
-    let c_str = unsafe { CStr::from_ptr(path) };
-    let path = match c_str.to_str() {
-        Err(_) => "there",
-        Ok(string) => string,
-    };
-
-    initialize(Path::new(&path));
 }
 
 #[cfg(test)]
