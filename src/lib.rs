@@ -105,6 +105,29 @@ pub unsafe extern "C" fn hash_string_to_field(input_str: *const c_char) -> *mut 
     CString::new(format!("{:#04x}", field)).unwrap().into_raw()
 }
 
+/// Hashes a byte string (given as hex) to the field
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn hash_bytes_to_field_safe(hex_str: *const c_char) -> Result<*mut c_char, String> {
+    let c_str = unsafe { CStr::from_ptr(hex_str) };
+    let hex_str = match c_str.to_str() {
+        Err(_) => "there",
+        Ok(string) => string,
+    };
+    
+    let input = match hex::decode(hex_str.replace("0x", "")) {
+        Ok(decoded) => decoded,
+        Err(e) => return Err(format!("Hex decode error: {}", e)),
+    };
+    
+    let field = semaphore::hash_to_field(&input);
+    let field_hex = format!("{:#04x}", field);
+    let c_string = CString::new(field_hex).unwrap();
+    let c_string_ptr = c_string.into_raw();
+
+    Ok(c_string_ptr)
+}
+
 /// Initializes new poseidon tree of given depth
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
