@@ -109,16 +109,10 @@ pub unsafe extern "C" fn hash_string_to_field(input_str: *const c_char) -> *mut 
 /// Hashes a byte string (given as hex) to the field
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn hash_bytes_to_field_safe(hex_str: *const c_char) -> Result<*mut c_char, String> {
-    let c_str = unsafe { CStr::from_ptr(hex_str) };
-    let hex_str = match c_str.to_str() {
-        Err(_) => "there",
-        Ok(string) => string,
-    };
-
+pub unsafe extern "C" fn hash_bytes_to_field_safe(hex_str: &str) -> Result<*mut c_char, String> {
     let input = match hex::decode(hex_str.replace("0x", "")) {
         Ok(decoded) => decoded,
-        Err(e) => return Err(format!("Hex decode error: {}", e)),
+        Err(e) => return Err(format!("Hex decode error: {}, for input value: {}", e, hex_str)),
     };
 
     let field = semaphore::hash_to_field(&input);
