@@ -2034,7 +2034,7 @@ dependencies = [
 [[package]]
 name = "semaphore"
 version = "0.1.0"
-source = "git+https://github.com/worldcoin/semaphore-rs?rev=c736d25#c736d258c0a6e6f0392f87864b1ee65bc41b3262"
+source = "git+https://github.com/worldcoin/semaphore-rs?rev=046eddb#046eddb79fc948b332e94ba444b3b854d3dc9bfc"
 dependencies = [
  "ark-bn254",
  "ark-circom",
