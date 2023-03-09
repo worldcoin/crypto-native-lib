@@ -65,7 +65,7 @@ dependencies = [
  "cfg-if",
  "color-eyre 0.5.11",
  "criterion",
- "ethers-core",
+ "ethers-core 0.6.0 (git+https://github.com/gakonst/ethers-rs?rev=4ce373b8569c927f64af2074b495de92a73bd419)",
  "fnv",
  "hex",
  "num",
@@ -995,6 +995,27 @@ dependencies = [
  "impl-serde",
  "primitive-types",
  "uint",
+]
+
+[[package]]
+name = "ethers-core"
+version = "0.6.0"
+source = "git+https://github.com/gakonst/ethers-rs?rev=4ce373b8569c927f64af2074b495de92a73bd419#4ce373b8569c927f64af2074b495de92a73bd419"
+dependencies = [
+ "arrayvec",
+ "bytes",
+ "elliptic-curve",
+ "ethabi",
+ "generic-array",
+ "hex",
+ "k256",
+ "rand",
+ "rlp",
+ "rlp-derive",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tiny-keccak",
 ]
 
 [[package]]
@@ -2034,7 +2055,7 @@ dependencies = [
 [[package]]
 name = "semaphore"
 version = "0.1.0"
-source = "git+https://github.com/worldcoin/semaphore-rs?rev=c736d25#c736d258c0a6e6f0392f87864b1ee65bc41b3262"
+source = "git+https://github.com/worldcoin/semaphore-rs?rev=046eddb#046eddb79fc948b332e94ba444b3b854d3dc9bfc"
 dependencies = [
  "ark-bn254",
  "ark-circom",
@@ -2046,7 +2067,7 @@ dependencies = [
  "color-eyre 0.6.1",
  "enumset",
  "ethabi",
- "ethers-core",
+ "ethers-core 0.6.0 (git+https://github.com/gakonst/ethers-rs)",
  "hex",
  "hex-literal",
  "num-bigint",
