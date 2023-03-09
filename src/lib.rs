@@ -37,7 +37,7 @@ pub unsafe extern "C" fn new_identity(
     let trapdoor_seed = if context.is_null() {
         None
     } else {
-        let c_str = unsafe { CStr::from_ptr(secret) };
+        let c_str = unsafe { CStr::from_ptr(context) };
         Some(c_str.to_bytes())
     };
 
