@@ -312,7 +312,7 @@ pub unsafe extern "C" fn encode_proof_packed(proof: *mut CGroth16Proof) -> *cons
 mod tests {
     use std::{
         ffi::{CStr, CString},
-        str::FromStr,
+        str::FromStr, ptr::null,
     };
 
     use semaphore::{
@@ -346,15 +346,90 @@ mod tests {
     }
 
     /// tests proof generation e2e
-    /// IMPORTANT: remove features = ["dylib"] from semaphore to run this test
     #[test]
-    fn e2e_test() {
-        let merkle_root_str = "0x24ea21a42e1a6c46ce04dad0635de46d37ff454629138cd19575ef0c42920bc9";
+    fn e2e_test_no_context() {
+        let merkle_root_str = "0x1f0239fd2961fd95f95693d546e260dfe0f587d0d23bc6deadcd1b4e01a85df1";
 
         let merkle_root = unsafe { CString::new(merkle_root_str).unwrap().into_raw() };
 
         let merkle_proof = unsafe {
-            let merkle_proof_json = r#"[{"Left":"0x0000000000000000000000000000000000000000000000000000000000000000"},{"Left":"0x2098f5fb9e239eab3ceac3f27b81e481dc3124d55ffed523a839ee8446b64864"},{"Left":"0x1069673dcdb12263df301a6ff584a7ec261a44cb9dc68df067a4774460b1f1e1"},{"Right":"0x2bb8fd74a65194116ac0bd12eba40fe0d98536f7899ebde5c825e8de0c97547d"},{"Left":"0x07f9d837cb17b0d36320ffe93ba52345f1b728571a568265caac97559dbc952a"},{"Left":"0x2b94cf5e8746b3f5c9631f4c5df32907a699c58c94b2ad4d7b5cec1639183f55"},{"Left":"0x2dee93c5a666459646ea7d22cca9e1bcfed71e6951b953611d11dda32ea09d78"},{"Left":"0x078295e5a22b84e982cf601eb639597b8b0515a88cb5ac7fa8a4aabe3c87349d"},{"Left":"0x2fa5e5f18f6027a6501bec864564472a616b2e274a41211a444cbe3a99f3cc61"},{"Left":"0x0e884376d0d8fd21ecb780389e941f66e45e7acce3e228ab3e2156a614fcd747"},{"Left":"0x1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2"},{"Left":"0x1f8d8822725e36385200c0b201249819a6e6e1e4650808b5bebc6bface7d7636"},{"Left":"0x2c5d82f66c914bafb9701589ba8cfcfb6162b0a12acf88a8d0879a0471b5f85a"},{"Left":"0x14c54148a0940bb820957f5adf3fa1134ef5c4aaa113f4646458f270e0bfbfd0"},{"Left":"0x190d33b12f986f961e10c0ee44d8b9af11be25588cad89d416118e4bf4ebe80c"},{"Left":"0x22f98aa9ce704152ac17354914ad73ed1167ae6596af510aa5b3649325e06c92"},{"Left":"0x2a7c7c9b6ce5880b9f6f228d72bf6a575a526f29c66ecceef8b753d38bba7323"},{"Left":"0x2e8186e558698ec1c67af9c14d463ffc470043c9c2988b954d75dd643f36b992"},{"Left":"0x0f57c5571e9a4eab49e2c8cf050dae948aef6ead647392273546249d1c1ff10f"},{"Left":"0x1830ee67b5fb554ad5f63d4388800e1cfe78e310697d46e43c9ce36134f72cca"}]"#;
+            let merkle_proof_json = r#"[{"Left":"0x0000000000000000000000000000000000000000000000000000000000000000"},{"Right":"0x08823840b7a228b7c7239c36d9eeca9cc514d96779c35db41dea1552c889fdf8"},{"Left":"0x1069673dcdb12263df301a6ff584a7ec261a44cb9dc68df067a4774460b1f1e1"},{"Right":"0x2bb8fd74a65194116ac0bd12eba40fe0d98536f7899ebde5c825e8de0c97547d"},{"Left":"0x07f9d837cb17b0d36320ffe93ba52345f1b728571a568265caac97559dbc952a"},{"Left":"0x2b94cf5e8746b3f5c9631f4c5df32907a699c58c94b2ad4d7b5cec1639183f55"},{"Left":"0x2dee93c5a666459646ea7d22cca9e1bcfed71e6951b953611d11dda32ea09d78"},{"Left":"0x078295e5a22b84e982cf601eb639597b8b0515a88cb5ac7fa8a4aabe3c87349d"},{"Left":"0x2fa5e5f18f6027a6501bec864564472a616b2e274a41211a444cbe3a99f3cc61"},{"Left":"0x0e884376d0d8fd21ecb780389e941f66e45e7acce3e228ab3e2156a614fcd747"},{"Left":"0x1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2"},{"Left":"0x1f8d8822725e36385200c0b201249819a6e6e1e4650808b5bebc6bface7d7636"},{"Left":"0x2c5d82f66c914bafb9701589ba8cfcfb6162b0a12acf88a8d0879a0471b5f85a"},{"Left":"0x14c54148a0940bb820957f5adf3fa1134ef5c4aaa113f4646458f270e0bfbfd0"},{"Left":"0x190d33b12f986f961e10c0ee44d8b9af11be25588cad89d416118e4bf4ebe80c"},{"Left":"0x22f98aa9ce704152ac17354914ad73ed1167ae6596af510aa5b3649325e06c92"},{"Left":"0x2a7c7c9b6ce5880b9f6f228d72bf6a575a526f29c66ecceef8b753d38bba7323"},{"Left":"0x2e8186e558698ec1c67af9c14d463ffc470043c9c2988b954d75dd643f36b992"},{"Left":"0x0f57c5571e9a4eab49e2c8cf050dae948aef6ead647392273546249d1c1ff10f"},{"Left":"0x1830ee67b5fb554ad5f63d4388800e1cfe78e310697d46e43c9ce36134f72cca"}]"#;
+            let merkle_proof_str = CString::new(merkle_proof_json).unwrap().into_raw();
+            deserialize_merkle_proof(merkle_proof_str)
+        };
+
+        let identity = unsafe {
+            let seed = CString::new("hello_xxx").unwrap().into_raw();
+            let context = CString::new("test").unwrap().into_raw();
+            new_identity(seed, null())
+        };
+
+        let identity_commitment = unsafe {
+            let id_comm = generate_identity_commitment(identity);
+            let id_comm_ptr = CStr::from_ptr(id_comm);
+            let id_comm_string = id_comm_ptr.to_str().unwrap();
+            id_comm_string
+        };
+
+        println!("{}", identity_commitment);
+
+        let external_nullifier_hash = unsafe {
+            CString::new("0x0046a9ddb149db600304d000ce3a3cfabde52070ae4b77504e17af77eeb6011e")
+                .unwrap()
+                .into_raw()
+        };
+
+        let signal_hash = unsafe {
+            let signal = CString::new("8d9a83E7654083F1ed763bBd5D76B5848b05Dc28")
+                .unwrap()
+                .into_raw();
+            hash_bytes_to_field(signal)
+        };
+
+        let proof =
+            unsafe { generate_proof(identity, external_nullifier_hash, signal_hash, merkle_proof) };
+
+        let nullifier = unsafe { generate_nullifier_hash(identity, external_nullifier_hash) };
+
+        let nullifier_str = unsafe {
+            let nullifier_ptr = CStr::from_ptr(nullifier);
+            nullifier_ptr.to_str().unwrap()
+        };
+
+        let result = unsafe {
+            verify_proof(
+                merkle_root,
+                external_nullifier_hash,
+                signal_hash,
+                nullifier,
+                proof,
+            )
+        };
+
+        // the proof needs to verify
+        assert_eq!(result, 1);
+
+        let serialized_proof = unsafe {
+            let json = serialize_groth16_proof(proof);
+            let json_ptr = CStr::from_ptr(json);
+            let json_string = json_ptr.to_str().unwrap();
+            format!("[{}]", json_string.replace("[", "").replace("]", ""))
+        };
+
+        println!(
+            "id: {}\nroot: {}\nnullifierHash: {}\nproof: {}",
+            identity_commitment, merkle_root_str, nullifier_str, serialized_proof
+        );
+    }
+
+    #[test]
+    fn e2e_test_with_context() {
+        let merkle_root_str = "0x1f0239fd2961fd95f95693d546e260dfe0f587d0d23bc6deadcd1b4e01a85df1";
+
+        let merkle_root = unsafe { CString::new(merkle_root_str).unwrap().into_raw() };
+
+        let merkle_proof = unsafe {
+            let merkle_proof_json = r#"[{"Right":"0x2dd161056341673ee983cb67b576da0e35229d6c29418eb2ee76ca3e31457345"},{"Left":"0x026bea7a347e2e5037d5f9b5b13da691e079356ab6f5fb48742a43f4636d9141"},{"Left":"0x1069673dcdb12263df301a6ff584a7ec261a44cb9dc68df067a4774460b1f1e1"},{"Right":"0x2bb8fd74a65194116ac0bd12eba40fe0d98536f7899ebde5c825e8de0c97547d"},{"Left":"0x07f9d837cb17b0d36320ffe93ba52345f1b728571a568265caac97559dbc952a"},{"Left":"0x2b94cf5e8746b3f5c9631f4c5df32907a699c58c94b2ad4d7b5cec1639183f55"},{"Left":"0x2dee93c5a666459646ea7d22cca9e1bcfed71e6951b953611d11dda32ea09d78"},{"Left":"0x078295e5a22b84e982cf601eb639597b8b0515a88cb5ac7fa8a4aabe3c87349d"},{"Left":"0x2fa5e5f18f6027a6501bec864564472a616b2e274a41211a444cbe3a99f3cc61"},{"Left":"0x0e884376d0d8fd21ecb780389e941f66e45e7acce3e228ab3e2156a614fcd747"},{"Left":"0x1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2"},{"Left":"0x1f8d8822725e36385200c0b201249819a6e6e1e4650808b5bebc6bface7d7636"},{"Left":"0x2c5d82f66c914bafb9701589ba8cfcfb6162b0a12acf88a8d0879a0471b5f85a"},{"Left":"0x14c54148a0940bb820957f5adf3fa1134ef5c4aaa113f4646458f270e0bfbfd0"},{"Left":"0x190d33b12f986f961e10c0ee44d8b9af11be25588cad89d416118e4bf4ebe80c"},{"Left":"0x22f98aa9ce704152ac17354914ad73ed1167ae6596af510aa5b3649325e06c92"},{"Left":"0x2a7c7c9b6ce5880b9f6f228d72bf6a575a526f29c66ecceef8b753d38bba7323"},{"Left":"0x2e8186e558698ec1c67af9c14d463ffc470043c9c2988b954d75dd643f36b992"},{"Left":"0x0f57c5571e9a4eab49e2c8cf050dae948aef6ead647392273546249d1c1ff10f"},{"Left":"0x1830ee67b5fb554ad5f63d4388800e1cfe78e310697d46e43c9ce36134f72cca"}]"#;
             let merkle_proof_str = CString::new(merkle_proof_json).unwrap().into_raw();
             deserialize_merkle_proof(merkle_proof_str)
         };
