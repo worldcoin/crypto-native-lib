@@ -332,12 +332,12 @@ mod tests {
     /// IMPORTANT: remove features = ["dylib"] from semaphore to run this test
     #[test]
     fn e2e_test() {
-        let merkle_root_str = "0x109630dc34d2beda3ba90e7016cfa71fc187e37a3e11598cf69aa0bdec0ab45e";
+        let merkle_root_str = "0x24ea21a42e1a6c46ce04dad0635de46d37ff454629138cd19575ef0c42920bc9";
 
         let merkle_root = unsafe { CString::new(merkle_root_str).unwrap().into_raw() };
 
         let merkle_proof = unsafe {
-            let merkle_proof_json = r#"[{"Left":"0x0000000000000000000000000000000000000000000000000000000000000000"},{"Left":"0x2098f5fb9e239eab3ceac3f27b81e481dc3124d55ffed523a839ee8446b64864"},{"Right":"0x1215dc5f76a7aa05e47b0bd502c9739f914b6a74ff1394e76f3ee09a43a5a67a"},{"Left":"0x18f43331537ee2af2e3d758d50f72106467c6eea50371dd528d57eb2b856d238"},{"Right":"0x2d11617349c253639b5826b4d74a2318c661256986188f06660dd3e899e94524"},{"Left":"0x2b94cf5e8746b3f5c9631f4c5df32907a699c58c94b2ad4d7b5cec1639183f55"},{"Left":"0x2dee93c5a666459646ea7d22cca9e1bcfed71e6951b953611d11dda32ea09d78"},{"Right":"0x276723e66059167837e3d20d1fd74202af8e17603ed7ea8087b543a16922d3f6"},{"Right":"0x0b9851a0ec93192e67da6e9367e69727323729411449818918b141f30e50da39"},{"Right":"0x207732400560e94e5ef329a7da2998db6af43bf4c092a7efc6b38545c15d67a2"},{"Left":"0x1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2"},{"Right":"0x0127a3b78cd00628d626feb777db866ab147f78fdc13d8c8d42ad098827f9a9e"},{"Left":"0x2c5d82f66c914bafb9701589ba8cfcfb6162b0a12acf88a8d0879a0471b5f85a"},{"Left":"0x14c54148a0940bb820957f5adf3fa1134ef5c4aaa113f4646458f270e0bfbfd0"},{"Left":"0x190d33b12f986f961e10c0ee44d8b9af11be25588cad89d416118e4bf4ebe80c"},{"Left":"0x22f98aa9ce704152ac17354914ad73ed1167ae6596af510aa5b3649325e06c92"},{"Left":"0x2a7c7c9b6ce5880b9f6f228d72bf6a575a526f29c66ecceef8b753d38bba7323"},{"Left":"0x2e8186e558698ec1c67af9c14d463ffc470043c9c2988b954d75dd643f36b992"},{"Left":"0x0f57c5571e9a4eab49e2c8cf050dae948aef6ead647392273546249d1c1ff10f"},{"Left":"0x1830ee67b5fb554ad5f63d4388800e1cfe78e310697d46e43c9ce36134f72cca"}]"#;
+            let merkle_proof_json = r#"[{"Left":"0x0000000000000000000000000000000000000000000000000000000000000000"},{"Left":"0x2098f5fb9e239eab3ceac3f27b81e481dc3124d55ffed523a839ee8446b64864"},{"Left":"0x1069673dcdb12263df301a6ff584a7ec261a44cb9dc68df067a4774460b1f1e1"},{"Right":"0x2bb8fd74a65194116ac0bd12eba40fe0d98536f7899ebde5c825e8de0c97547d"},{"Left":"0x07f9d837cb17b0d36320ffe93ba52345f1b728571a568265caac97559dbc952a"},{"Left":"0x2b94cf5e8746b3f5c9631f4c5df32907a699c58c94b2ad4d7b5cec1639183f55"},{"Left":"0x2dee93c5a666459646ea7d22cca9e1bcfed71e6951b953611d11dda32ea09d78"},{"Left":"0x078295e5a22b84e982cf601eb639597b8b0515a88cb5ac7fa8a4aabe3c87349d"},{"Left":"0x2fa5e5f18f6027a6501bec864564472a616b2e274a41211a444cbe3a99f3cc61"},{"Left":"0x0e884376d0d8fd21ecb780389e941f66e45e7acce3e228ab3e2156a614fcd747"},{"Left":"0x1b7201da72494f1e28717ad1a52eb469f95892f957713533de6175e5da190af2"},{"Left":"0x1f8d8822725e36385200c0b201249819a6e6e1e4650808b5bebc6bface7d7636"},{"Left":"0x2c5d82f66c914bafb9701589ba8cfcfb6162b0a12acf88a8d0879a0471b5f85a"},{"Left":"0x14c54148a0940bb820957f5adf3fa1134ef5c4aaa113f4646458f270e0bfbfd0"},{"Left":"0x190d33b12f986f961e10c0ee44d8b9af11be25588cad89d416118e4bf4ebe80c"},{"Left":"0x22f98aa9ce704152ac17354914ad73ed1167ae6596af510aa5b3649325e06c92"},{"Left":"0x2a7c7c9b6ce5880b9f6f228d72bf6a575a526f29c66ecceef8b753d38bba7323"},{"Left":"0x2e8186e558698ec1c67af9c14d463ffc470043c9c2988b954d75dd643f36b992"},{"Left":"0x0f57c5571e9a4eab49e2c8cf050dae948aef6ead647392273546249d1c1ff10f"},{"Left":"0x1830ee67b5fb554ad5f63d4388800e1cfe78e310697d46e43c9ce36134f72cca"}]"#;
             let merkle_proof_str = CString::new(merkle_proof_json).unwrap().into_raw();
             deserialize_merkle_proof(merkle_proof_str)
         };
@@ -354,6 +354,8 @@ mod tests {
             let id_comm_string = id_comm_ptr.to_str().unwrap();
             id_comm_string
         };
+
+        println!("{}", identity_commitment);
 
         let external_nullifier_hash = unsafe {
             CString::new("0x0046a9ddb149db600304d000ce3a3cfabde52070ae4b77504e17af77eeb6011e")
