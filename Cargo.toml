@@ -13,7 +13,7 @@ serde = "1.0"
 serde_json = "1.0"
 
 [patch.crates-io]
-wasmer = { git = "https://github.com/philsippl/wasmer", rev = "9d782a3" }
+wasmer = { git = "https://github.com/wasmerio/wasmer", rev="fa282f8" }
 
 [lib]
 name = "cryptonative"
