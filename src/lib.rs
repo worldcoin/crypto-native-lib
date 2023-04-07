@@ -263,6 +263,7 @@ pub unsafe extern "C" fn verify_proof(
         signal_hash,
         external_nullifier_hash,
         &proof.0,
+        20,
     )
     .unwrap() as i32
 }
@@ -331,7 +332,7 @@ mod tests {
             let seed = CString::new("hello_xxx").unwrap().into_raw();
             let context = CString::new("test").unwrap().into_raw();
 
-            let identity_ptr = new_identity(seed, context);
+            let identity_ptr = new_identity(seed, null());
             let id_comm = generate_identity_commitment(identity_ptr);
             let id_comm_ptr = CStr::from_ptr(id_comm);
             let id_comm_string = id_comm_ptr.to_str().unwrap();
